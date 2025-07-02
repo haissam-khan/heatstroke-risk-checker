@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>熱中症リスクチェック (Enhanced)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Base styles and custom overrides */
+        body {
+            font-family: 'Noto Sans JP', 'Inter', sans-serif;
+        }
+        .lang-btn.active {
+            background-color: #3b82f6; /* Tailwind blue-500 */
+            color: white;
+        }
+        .lang-btn:not(.active) {
+            background-color: #e5e7eb; /* Tailwind gray-200 */
+            color: #3b82f6;
+        }
+        h1, h2, h3 {
+            color: #1e40af; /* Tailwind blue-800 */
+        }
+        /* --- Cohesive Color System for Risk Levels --- */
+        .risk-almost-safe    { background-color: #eff6ff; color: #1e40af; } /* blue-50 / blue-800 */
+        .risk-caution        { background-color: #fefce8; color: #854d0e; } /* yellow-50 / yellow-700 */
+        .risk-warning        { background-color: #fff7ed; color: #9a3412; } /* orange-50 / orange-700 */
+        .risk-severe-warning { background-color: #fee2e2; color: #991b1b; } /* red-50 / red-800 */
+        .risk-danger         { background-color: #f3e8ff; color: #6b21a8; } /* purple-50 / purple-800 */
+        
+        .gauge-container {
+            width: 100%;
+            height: 30px;
+            background-color: #e5e7eb; /* gray-200 */
+            border-radius: 15px;
+            overflow: hidden;
+            margin: 1rem 0;
+            border: 1px solid #d1d5db; /* gray-300 */
+        }
+        .gauge-fill {
+            height: 100%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            transition: width 0.4s ease, background-color 0.4s ease;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body class="bg-stone-100 text-slate-800">
+
+    <!-- Header Banner - Corrected Text Color -->
+    <div class="w-full bg-[#375F9B] p-3 shadow-md">
+        <div class="container mx-auto">
+            <h2 class="text-xl font-bold text-white">Air Liquide Japan</h2>
+        </div>
+    </div>
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8 max-w-7xl">
+        <header class="mb-6 text-center">
+            <h1 class="text-3xl font-bold" data-translate="appTitle">熱中症リスクチェック</h1>
+            <div class="mt-2">
+                <button id="lang-ja-btn" class="lang-btn px-3 py-1 rounded-md text-sm font-medium" data-lang="ja">日本語</button>
+                <button id="lang-en-btn" class="lang-btn px-3 py-1 rounded-md text-sm font-medium" data-lang="en">English</button>
+            </div>
+        </header>
+
+        <!-- Main content area with responsive 2-column layout -->
+        <main class="lg:flex lg:gap-8">
+
+            <!-- Left Column: Main Application -->
+            <div class="lg:w-2/3 w-full">
+                <section class="bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h2 class="text-xl font-semibold mb-4" data-translate="locationInputTitle">場所を入力</h2>
+                    <div class="grid grid-cols-1 gap-4 mb-4">
+                        <div>
+                            <label for="location-input" class="block text-sm font-medium text-gray-700" data-translate="locationInputLabel">市町村名または郵便番号</label>
+                            <input type="text" id="location-input" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                        </div>
+                    </div>
+                    <button id="check-risk-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition-colors" data-translate="checkRiskButton">
+                        リスクを確認
+                    </button>
+                    <div id="feedback-container" class="text-center mt-4"></div>
+                </section>
+
+                <section id="results-section" class="hidden bg-white p-6 rounded-lg shadow-md mb-6">
+                    <h2 class="text-xl font-semibold mb-2" data-translate="resultsTitle">リスク評価</h2>
+                    <p class="text-sm text-gray-600 mb-1"><span data-translate="locationLabel">場所:</span> <span id="location-display"></span></p>
+                    <p class="text-sm text-gray-600 mb-4"><span data-translate="assessmentTimeLabel">評価時刻:</span> <span id="assessment-time-display"></span></p>
+
+                    <h3 class="text-lg font-medium mb-2" data-translate="riskGaugeTitle">現在/直近のリスクゲージ</h3>
+                    <div class="gauge-container">
+                        <div id="risk-gauge-fill" class="gauge-fill" style="width: 0%;"></div>
+                    </div>
+                    <p id="gauge-details" class="text-sm text-center text-gray-600 mb-4"></p>
+
+                    <h3 class="text-lg font-medium mb-2" data-translate="hourlyForecastTitle">予報 (次の24時間)</h3>
+                    <div class="overflow-x-auto rounded-md border">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="timeHeader">時刻</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="tempHeader">気温 (°C)</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">WBGT (°C)</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="heatRiskHeader">暑熱リスク</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="windChillHeader">体感温度 (°C)</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider" data-translate="rainHeader">雨 (mm/3h)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hourly-forecast-body" class="bg-white divide-y divide-gray-200"></tbody>
+                        </table>
+                    </div>
+                     <p class="text-xs text-gray-500 mt-2" data-translate="wbgtApproxNote">**注:** WBGT値は、OpenWeatherMap APIから入手可能なデータ（気温、湿度、風速、雲量）に基づく推定値です。日射量の直接測定は含まれていないため、あくまで目安としてご利用ください。</p>
+
+                    <h3 class="text-lg font-medium mt-6 mb-2" data-translate="actionableTipsTitle">具体的な安全対策</h3>
+                    <div id="actionable-tips" class="p-4 rounded-md whitespace-pre-line"></div>
+                </section>
+            </div>
+
+            <!-- Right Column: Info and Legend -->
+            <aside class="lg:w-1/3 w-full mt-6 lg:mt-0">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="font-semibold mb-2" data-translate="standardsTitle">準拠基準・情報</h4>
+                    <p class="text-xs text-gray-600" data-translate="standardsText">このツールは、厚生労働省の熱中症予防ガイドライン（WBGT）、JIS B 7922、および一般的な労働安全ガイドラインに基づいたリスク評価を提供します。常に公式の警報および現場固有の安全手順を優先してください。</p>
+                    
+                    <h4 class="font-semibold mt-4 mb-2" data-translate="legendTitle">凡例 (WBGT 暑熱リスク)</h4>
+                    <ul class="list-disc list-inside space-y-1 text-xs text-gray-600">
+                        <li><span class="font-bold text-sky-600" data-translate="risk_almost-safe">ほぼ安全</span>: WBGT &lt; 21°C</li>
+                        <li><span class="font-bold text-yellow-500" data-translate="risk_caution">注意</span>: WBGT 21-25°C</li>
+                        <li><span class="font-bold text-orange-500" data-translate="risk_warning">警戒</span>: WBGT 25-28°C</li>
+                        <li><span class="font-bold text-red-500" data-translate="risk_severe-warning">厳重警戒</span>: WBGT 28-31°C</li>
+                        <li><span class="font-bold text-purple-600" data-translate="risk_danger">危険</span>: WBGT ≥ 31°C</li>
+                    </ul>
+                </div>
+            </aside>
+        </main>
+        
+        <!-- Page Footer -->
+        <footer class="text-center mt-8 text-xs text-gray-500">
+            <p>Developed by Gemini - Air Liquide Japan</p>
+            <p>Prepared by Haissam - haissam.khan@airliquide.com</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- CONFIGURATION ---
+            // IMPORTANT: Exposing your API key in client-side code is a security risk.
+            const API_KEY = '51f4aecd535a479897726bc25008d8bc'; 
+
+            const state = {
+                currentLang: (navigator.language.startsWith('ja')) ? 'ja' : 'en',
+                weatherData: null,
+                locationName: null,
+            };
+
+            const translations = {
+                appTitle: { ja: "熱中症リスクチェック", en: "Heatstroke Risk Check" },
+                locationInputTitle: { ja: "場所を入力", en: "Enter Location" },
+                locationInputLabel: { ja: "市町村名または郵便番号", en: "City Name or Postcode" },
+                locationInputPlaceholder: { ja: "例: 千葉県浦安市 または 279-0031", en: "e.g., Urayasu, Chiba or 279-0031" },
+                checkRiskButton: { ja: "リスクを確認", en: "Check Risk" },
+                resultsTitle: { ja: "リスク評価", en: "Risk Assessment" },
+                locationLabel: { ja: "場所:", en: "Location:" },
+                assessmentTimeLabel: { ja: "評価時刻:", en: "Assessment Time:" },
+                riskGaugeTitle: { ja: "現在/直近のリスクゲージ", en: "Current/Upcoming Risk Gauge" },
+                hourlyForecastTitle: { ja: "予報 (次の24時間)", en: "Forecast (Next 24 Hours)" },
+                timeHeader: { ja: "時刻", en: "Time" },
+                tempHeader: { ja: "気温 (°C)", en: "Temp (°C)" },
+                heatRiskHeader: { ja: "暑熱リスク", en: "Heat Risk" },
+                windChillHeader: { ja: "体感温度 (°C)", en: "Feels Like (°C)" },
+                rainHeader: { ja: "雨 (mm/3h)", en: "Rain (mm/3h)" },
+                wbgtApproxNote: { ja: "**注:** WBGT値は、OpenWeatherMap APIから入手可能なデータ（気温、湿度、風速、雲量）に基づく推定値です。日射量の直接測定は含まれていないため、あくまで目安としてご利用ください。", en: "**Note:** WBGT values are an estimation based on available OpenWeatherMap API data (temp, humidity, wind, cloud cover). They do not include direct solar radiation measurement and should be used as a guideline." },
+                actionableTipsTitle: { ja: "具体的な安全対策", en: "Actionable Safety Tips" },
+                standardsTitle: { ja: "準拠基準・情報", en: "Standards & Information" },
+                standardsText: { ja: "このツールは、厚生労働省の熱中症予防ガイドライン（WBGT）、JIS B 7922、および一般的な労働安全ガイドラインに基づいたリスク評価を提供します。常に公式の警報および現場固有の安全手順を優先してください。", en: "This tool provides risk assessment based on guidelines from the Japanese Ministry of Health, Labour and Welfare (MHLW) for heat stress (WBGT), JIS B 7922, and general occupational safety guidelines. Always prioritize official alerts and site-specific safety protocols." },
+                legendTitle: { ja: "凡例 (WBGT 暑熱リスク)", en: "Legend (WBGT Heat Risk)" },
+                "risk_almost-safe": { ja: "ほぼ安全", en: "Almost Safe" },
+                "risk_caution": { ja: "注意", en: "Caution" },
+                "risk_warning": { ja: "警戒", en: "Warning" },
+                "risk_severe-warning": { ja: "厳重警戒", en: "Severe Warning" },
+                "risk_danger": { ja: "危険", en: "Danger" },
+                feedbackLoading: { ja: "データを読み込み中...", en: "Loading data..." },
+                errorInvalidLocation: { ja: "有効な場所が見つかりません。入力をご確認ください。", en: "Could not find a valid location. Please check your input." },
+                errorApi: { ja: "天気データの取得中にエラーが発生しました。APIキーまたはネットワーク接続を確認してください。", en: "An error occurred while fetching weather data. Please check your API key or network connection." },
+                tip_safe: { ja: "適切な水分補給を心がけてください。", en: "Maintain proper hydration." },
+                tip_caution: { ja: "意識的に水分補給を行い、休憩を検討してください。", en: "Consciously hydrate and consider taking breaks." },
+                tip_warning: { ja: "頻繁に休憩を取り、激しい運動は避けてください。", en: "Take frequent breaks and avoid strenuous exercise." },
+                tip_severe_warning: { ja: "激しい作業は涼しい時間帯にずらすことを検討してください。水分と塩分を定期的に補給してください。", en: "Consider rescheduling strenuous work to cooler times. Replenish water and salt regularly." },
+                tip_danger: { ja: "原則として屋外での激しい作業は中止してください。非常に危険な状態です。", en: "In principle, stop strenuous outdoor work. Conditions are highly dangerous." },
+                tip_cold: { ja: "低温によるリスクがあります。適切な防寒着を着用してください。", en: "Risk of cold stress. Wear appropriate warm clothing." },
+                tip_rain: { ja: "雨によるスリップや視界不良に注意してください。", en: "Beware of slippery conditions due to rain." },
+            };
+
+            const riskConfig = {
+                levels: [
+                    { limit: 21, key: "almost-safe",    cssClass: "risk-almost-safe",    gauge: 20, tipKey: "tip_safe" },
+                    { limit: 25, key: "caution",        cssClass: "risk-caution",        gauge: 40, tipKey: "tip_caution" },
+                    { limit: 28, key: "warning",        cssClass: "risk-warning",        gauge: 60, tipKey: "tip_warning" },
+                    { limit: 31, key: "severe-warning", cssClass: "risk-severe-warning", gauge: 80, tipKey: "tip_severe_warning" },
+                    { limit: Infinity, key: "danger",   cssClass: "risk-danger",         gauge: 100, tipKey: "tip_danger" }
+                ],
+                tipStyles: {
+                    "almost-safe":    "bg-blue-50 border-l-4 border-blue-400 text-blue-700",
+                    "caution":        "bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800",
+                    "warning":        "bg-orange-50 border-l-4 border-orange-400 text-orange-800",
+                    "severe-warning": "bg-red-50 border-l-4 border-red-400 text-red-800",
+                    "danger":         "bg-purple-50 border-l-4 border-purple-400 text-purple-800",
+                    "cold":           "bg-sky-50 border-l-4 border-sky-400 text-sky-800",
+                    "rain":           "bg-gray-100 border-l-4 border-gray-400 text-gray-800"
+                }
+            };
+            
+            const ui = {
+                locationInput: document.getElementById('location-input'),
+                checkRiskBtn: document.getElementById('check-risk-btn'),
+                feedbackContainer: document.getElementById('feedback-container'),
+                resultsSection: document.getElementById('results-section'),
+                langJaBtn: document.getElementById('lang-ja-btn'),
+                langEnBtn: document.getElementById('lang-en-btn'),
+                locationDisplay: document.getElementById('location-display'),
+                assessmentTimeDisplay: document.getElementById('assessment-time-display'),
+                riskGaugeFill: document.getElementById('risk-gauge-fill'),
+                gaugeDetails: document.getElementById('gauge-details'),
+                hourlyForecastBody: document.getElementById('hourly-forecast-body'),
+                actionableTips: document.getElementById('actionable-tips'),
+            };
+
+            function translatePage() {
+                document.documentElement.lang = state.currentLang;
+                ui.langJaBtn.classList.toggle('active', state.currentLang === 'ja');
+                ui.langEnBtn.classList.toggle('active', state.currentLang === 'en');
+                
+                document.querySelectorAll('[data-translate]').forEach(el => {
+                    const key = el.getAttribute('data-translate');
+                    if (translations[key] && translations[key][state.currentLang]) {
+                        el.innerHTML = translations[key][state.currentLang];
+                    }
+                });
+                ui.locationInput.placeholder = translations.locationInputPlaceholder[state.currentLang];
+
+                if (state.weatherData) {
+                    processAndDisplayData(state.weatherData, state.locationName);
+                }
+            }
+
+            function switchLanguage(lang) {
+                state.currentLang = lang;
+                translatePage();
+            }
+
+            function showFeedback(messageKey, isError = false) {
+                const message = translations[messageKey]?.[state.currentLang] || "An unknown error occurred.";
+                ui.feedbackContainer.innerHTML = `<p class="${isError ? 'text-red-600' : 'text-blue-600'}">${message}</p>`;
+                if (!isError && messageKey === 'feedbackLoading') {
+                    ui.feedbackContainer.innerHTML += `<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mt-2"></div>`;
+                }
+            }
+            function clearFeedback() { ui.feedbackContainer.innerHTML = ''; }
+
+            async function handleRiskCheck() {
+                const location = ui.locationInput.value.trim();
+                if (!location) return;
+
+                ui.resultsSection.classList.add('hidden');
+                clearFeedback();
+                showFeedback('feedbackLoading');
+
+                try {
+                    const geoData = await getGeoCoordinates(location);
+                    const weatherData = await getWeatherData(geoData.lat, geoData.lon);
+                    
+                    state.weatherData = weatherData;
+                    state.locationName = geoData.name;
+
+                    processAndDisplayData(weatherData, geoData.name);
+                    clearFeedback();
+                } catch (error) {
+                    console.error("Error during risk check:", error);
+                    const messageKey = Object.keys(translations).includes(error.message) ? error.message : 'errorApi';
+                    showFeedback(messageKey, true);
+                }
+            }
+
+            async function getGeoCoordinates(location) {
+                const isPostcode = /^\d{3}-?\d{4}$/.test(location);
+                let url;
+                if (isPostcode) {
+                    url = `https://api.openweathermap.org/geo/1.0/zip?zip=${location},JP&appid=${API_KEY}`;
+                } else {
+                    url = `https://api.openweathermap.org/geo/1.0/direct?q=${location},JP&limit=1&appid=${API_KEY}`;
+                }
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('errorApi');
+                const data = await response.json();
+
+                if (Array.isArray(data) && data.length > 0) {
+                    const { lat, lon, name, state: region, country } = data[0];
+                    return { lat, lon, name: `${name}, ${region || ''} ${country}` };
+                } else if (data.lat) {
+                    return { lat: data.lat, lon: data.lon, name: `${data.name}, ${data.country}` };
+                }
+                throw new Error('errorInvalidLocation');
+            }
+
+            async function getWeatherData(lat, lon) {
+                const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('errorApi');
+                return await response.json();
+            }
+
+            function processAndDisplayData(weatherData, locationName) {
+                const now = new Date();
+                const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+                const processedData = weatherData.list.map(item => {
+                    const Ta = item.main.temp;
+                    const RH = item.main.humidity;
+                    const Tnw = calculateTnw(Ta, RH);
+                    const Tg = calculateTg(Ta, item.clouds.all);
+                    const wbgt = 0.7 * Tnw + 0.2 * Tg + 0.1 * Ta;
+                    
+                    return {
+                        time: new Date(item.dt * 1000),
+                        temp: Ta.toFixed(1),
+                        feels_like: item.main.feels_like.toFixed(1),
+                        rain: (item.rain ? item.rain['3h'] : 0).toFixed(1),
+                        wbgt: wbgt.toFixed(1),
+                        heatRisk: getHeatRiskLevel(wbgt),
+                    };
+                }).filter(item => item.time <= twentyFourHoursFromNow);
+
+                if (processedData.length === 0) {
+                    showFeedback('errorApi', true);
+                    return;
+                }
+
+                ui.locationDisplay.textContent = locationName;
+                ui.assessmentTimeDisplay.textContent = new Date().toLocaleString(state.currentLang === 'ja' ? 'ja-JP' : 'en-US');
+                
+                const currentRisk = processedData[0];
+                updateGauge(currentRisk);
+                updateTips(currentRisk);
+                updateHourlyTable(processedData);
+                
+                ui.resultsSection.classList.remove('hidden');
+            }
+            
+            function calculateTnw(Ta, RH) {
+                return Ta * Math.atan(0.151977 * Math.pow(RH + 8.313659, 0.5)) + Math.atan(Ta + RH) - Math.atan(RH - 1.676331) + 0.00391838 * Math.pow(RH, 1.5) * Math.atan(0.023101 * RH) - 4.686035;
+            }
+
+            function calculateTg(Ta, cloudiness) {
+                let radiantHeatIncrement = 0.5;
+                if (cloudiness < 25) radiantHeatIncrement = 6;
+                else if (cloudiness < 50) radiantHeatIncrement = 4;
+                else if (cloudiness < 75) radiantHeatIncrement = 2;
+                return Ta + radiantHeatIncrement;
+            }
+            
+            function getHeatRiskLevel(wbgt) {
+                return riskConfig.levels.find(level => wbgt < level.limit);
+            }
+
+            // --- UI UPDATE HELPERS ---
+            function updateGauge(riskData) {
+                const riskLevel = riskData.heatRisk;
+                const gaugeFill = ui.riskGaugeFill;
+
+                gaugeFill.classList.remove(
+                    'risk-almost-safe',
+                    'risk-caution',
+                    'risk-warning',
+                    'risk-severe-warning',
+                    'risk-danger'
+                );
+                
+                gaugeFill.classList.add(riskLevel.cssClass);
+
+                gaugeFill.style.width = `${riskLevel.gauge}%`;
+                gaugeFill.textContent = translations[`risk_${riskLevel.key}`][state.currentLang];
+                ui.gaugeDetails.textContent = `WBGT: ${riskData.wbgt}°C`;
+            }
+            
+            function updateTips(riskData) {
+                let tips = [translations[riskData.heatRisk.tipKey][state.currentLang]];
+                let dominantRiskKey = riskData.heatRisk.key;
+
+                if (parseFloat(riskData.feels_like) < 5 && parseFloat(riskData.feels_like) < parseFloat(riskData.temp)) {
+                    tips.push(translations.tip_cold[state.currentLang]);
+                    if (dominantRiskKey === 'almost-safe' || dominantRiskKey === 'caution') {
+                       dominantRiskKey = 'cold';
+                    }
+                }
+                if (parseFloat(riskData.rain) > 1.0) {
+                    tips.push(translations.tip_rain[state.currentLang]);
+                }
+                
+                const tipStyle = riskConfig.tipStyles[dominantRiskKey] || riskConfig.tipStyles['caution'];
+                ui.actionableTips.className = `p-4 rounded-md whitespace-pre-line ${tipStyle}`;
+                ui.actionableTips.innerHTML = tips.join('<br><br>');
+            }
+
+            function updateHourlyTable(processedData) {
+                ui.hourlyForecastBody.innerHTML = '';
+                
+                const timeFormat = new Intl.DateTimeFormat(state.currentLang === 'ja' ? 'ja-JP' : 'en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
+                const dateFormat = new Intl.DateTimeFormat(state.currentLang === 'ja' ? 'ja-JP' : 'en-CA', { weekday: 'short', month: 'numeric', day: 'numeric' });
+
+                processedData.forEach(item => {
+                    const row = ui.hourlyForecastBody.insertRow();
+                    const riskLabel = translations[`risk_${item.heatRisk.key}`][state.currentLang];
+                    const riskColorClass = item.heatRisk.cssClass;
+
+                    row.innerHTML = `
+                        <td class="px-3 py-2 whitespace-nowrap text-sm">${dateFormat.format(item.time)} ${timeFormat.format(item.time)}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm">${item.temp}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm font-semibold">${item.wbgt}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${riskColorClass}">
+                                ${riskLabel}
+                            </span>
+                        </td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm">${item.feels_like}</td>
+                        <td class="px-3 py-2 whitespace-nowrap text-sm">${item.rain}</td>
+                    `;
+                });
+            }
+
+            ui.checkRiskBtn.addEventListener('click', handleRiskCheck);
+            ui.locationInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleRiskCheck();
+            });
+            ui.langJaBtn.addEventListener('click', () => switchLanguage('ja'));
+            ui.langEnBtn.addEventListener('click', () => switchLanguage('en'));
+
+            translatePage();
+        });
+    </script>
+</body>
+</html>
