@@ -77,4 +77,3 @@ const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY_HERE';
 2. In the JavaScript, locate the Gemini API fetch section and replace with your own API key:
 ```js
 const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent?key=YOUR_GEMINI_API_KEY";
-
