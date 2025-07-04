@@ -68,12 +68,16 @@ _Note: WBGT is estimated and does not include direct solar radiation._
 
 1. Get a free API key: [https://openweathermap.org/api](https://openweathermap.org/api)  
 2. In the HTML file, replace:
-```js
-const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY_HERE';
 
-### 🤖 (Optional) Gemini API Setup for AI Advice
+```const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY_HERE';```
 
-1. Sign up at [https://makersuite.google.com/](https://makersuite.google.com/)
-2. In the JavaScript, locate the Gemini API fetch section and replace with your own API key:
+### 🤖 Step 2: (Optional) Gemini API Setup for AI Advice
+
+1. To enable AI-generated safety guidance based on site activity and environmental factors:
+2. Sign up for access to Gemini API at [https://makersuite.google.com/](https://makersuite.google.com/)
+3. In the HTML or JavaScript section of your code, locate this line, and replace YOUR_GEMINI_API_KEY with your own API key from Google:
+4. Note: Without the Gemini key, the app will still show WBGT forecasts — but the AI-generated safety plan feature will be disabled.
+
 ```js
 const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent?key=YOUR_GEMINI_API_KEY";
+
