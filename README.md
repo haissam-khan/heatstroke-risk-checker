@@ -1,21 +1,42 @@
-# 🌡️ Heatstroke Risk Checker (熱中症リスクチェック)
+# 🌡️ Heatstroke Risk Checker | 熱中症リスクチェック
 
-A bilingual web app (English / 日本語) that helps workers and field teams assess heatstroke risk based on local weather forecasts and WBGT calculations. Built for internal safety use at Air Liquide Japan, this tool promotes safer work planning during extreme summer heat.
+A bilingual safety tool designed to help field teams, site managers, and contractors in Japan assess heatstroke risk using WBGT (Wet Bulb Globe Temperature), rain, wind chill, and temperature forecasts. Built with legal and operational responsibility in mind — safety isn't optional, it's our duty.
 
-## 🎯 Purpose
+## 🧠 What This Project Does
 
-In hot and humid environments like Japan's summer season, heat-related illness is a major safety concern. This app helps assess real-time and forecasted risk levels by location, using temperature, humidity, cloud cover, and wind speed to approximate WBGT (Wet Bulb Globe Temperature) values.
+This web app allows users to input a Japanese city or postal code and receive a 30-hour forecast that includes:
+- WBGT-based heat risk levels
+- AI-generated safety plans (with or without activity context)
+- Bilingual interface (Japanese / English)
+- Tips for hydration, breaks, and safe timing of fieldwork
 
-## 💡 Features
+## 🎯 Why It Matters
 
-- 🔁 **Bilingual Support (EN/JA)** — Toggle between English and Japanese UI
-- 📍 **Location-Based Search** — Accepts city names or postal codes in Japan
-- 🌡️ **WBGT Estimation** — Based on MHLW and JIS B 7922 guidelines
-- 📊 **Risk Visualization** — Color-coded gauge and 24-hour forecast table
-- ✅ **Safety Tips** — Personalized guidance based on WBGT, cold risk, and rain
-- 📱 **Responsive UI** — Works well on desktop and mobile
+In Japan, extreme summer heat poses serious risks to outdoor workers. Under both law and company policy, project managers and site leads are responsible for early detection, planning, and documentation to prevent heatstroke incidents.
 
-## 🧠 WBGT Levels & Risk Interpretation
+🔺 **Legal Note (Japanese Law)**  
+Employers and site managers are obligated to:
+- Detect and report heatstroke cases early  
+- Prepare a response procedure and emergency contact system  
+- Train relevant personnel on both
+
+**Penalties** include:
+- Up to 6 months detention or ¥500,000 fine for individuals
+- Up to ¥500,000 fine for corporations
+
+As a project manager at Air Liquide Japan, I built this tool as part of our commitment to safety, legal compliance, and ethical project delivery.
+
+## 🚀 Features
+
+- 🔄 **Bilingual UI** — Switch between English and Japanese
+- 📍 **Location-based risk** — Use city or postal code
+- 📊 **WBGT gauge** — Live risk level using scientific estimates
+- 🧠 **AI-powered safety advice** — Based on Gemini API
+- 📝 **Optional activity-specific plans**
+- 🌧️ Rain and cold stress indicators
+- 📱 Mobile-friendly, single-page app
+
+## 💡 WBGT Levels & Risk Interpretation
 
 | WBGT (°C) | Risk Level         | Action                                |
 |-----------|--------------------|----------------------------------------|
@@ -27,15 +48,33 @@ In hot and humid environments like Japan's summer season, heat-related illness i
 
 _Note: WBGT is estimated and does not include direct solar radiation._
 
-## 🛠️ Tech Stack
+## 🛠️ Tech Stack / Tools Used
 
-- HTML, Tailwind CSS, JavaScript (Vanilla)
-- OpenWeatherMap Geocoding + Forecast APIs
-- Custom WBGT approximation algorithm
-- Fully client-side, no backend
+- HTML / Tailwind CSS / Vanilla JavaScript  
+- OpenWeatherMap API (Geocoding + Forecast)  
+- Gemini API (for safety planning and activity insights)  
+- Custom WBGT estimation logic  
+- Legal/standards: MHLW guidelines, JIS B 7922, internal safety rules
 
-## 🚀 How to Use
+## 🌐 Live Demo
 
-1. Clone the repo:
-   ```bash
-   git clone https://github.com/yourusername/heatstroke-risk-checker.git
+👉 [https://khanhaissam.github.io/heatstroke-risk-checker/](https://khanhaissam.github.io/heatstroke-risk-checker/)
+
+## 🧪 How to Run This Project
+
+> No setup needed — just clone and open `index.html` in your browser.
+
+### 🔑 Step 1: Add Your OpenWeatherMap API Key
+
+1. Get a free API key: [https://openweathermap.org/api](https://openweathermap.org/api)  
+2. In the HTML file, replace:
+```js
+const API_KEY = 'YOUR_OPENWEATHERMAP_API_KEY_HERE';
+
+### 🤖 (Optional) Gemini API Setup for AI Advice
+
+1. Sign up at [https://makersuite.google.com/](https://makersuite.google.com/)
+2. In the JavaScript, locate the Gemini API fetch section and replace with your own API key:
+```js
+const apiUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-pro:generateContent?key=YOUR_GEMINI_API_KEY";
+
