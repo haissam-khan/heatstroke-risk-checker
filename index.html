@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>熱中症リスクチェック (Enhanced)</title>
+    <title>熱中症リスクチェック (AI-Enhanced)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -50,10 +50,10 @@
 </head>
 <body class="bg-stone-100 text-slate-800">
 
-    <!-- Header Banner - Corrected Text Color -->
+    <!-- Header Banner -->
     <div class="w-full bg-[#375F9B] p-3 shadow-md">
         <div class="container mx-auto">
-            <h2 class="text-xl font-bold text-white">Air Liquide Japan</h2>
+            <h2 class="text-xl font-bold text-white">Solutions by Haissam</h2>
         </div>
     </div>
 
@@ -85,6 +85,13 @@
                     <div id="feedback-container" class="text-center mt-4"></div>
                 </section>
 
+                <!-- Clear Results Button (newly added) -->
+                <div class="flex justify-end mb-4">
+                    <button id="clear-results-btn" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-1 px-3 rounded-lg transition-colors" data-translate="clearResultsButton">
+                        クリア
+                    </button>
+                </div>
+
                 <section id="results-section" class="hidden bg-white p-6 rounded-lg shadow-md mb-6">
                     <h2 class="text-xl font-semibold mb-2" data-translate="resultsTitle">リスク評価</h2>
                     <p class="text-sm text-gray-600 mb-1"><span data-translate="locationLabel">場所:</span> <span id="location-display"></span></p>
@@ -96,7 +103,7 @@
                     </div>
                     <p id="gauge-details" class="text-sm text-center text-gray-600 mb-4"></p>
 
-                    <h3 class="text-lg font-medium mb-2" data-translate="hourlyForecastTitle">予報 (次の24時間)</h3>
+                    <h3 class="text-lg font-medium mb-2" data-translate="hourlyForecastTitle">予報 (次の30時間)</h3>
                     <div class="overflow-x-auto rounded-md border">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -112,10 +119,29 @@
                             <tbody id="hourly-forecast-body" class="bg-white divide-y divide-gray-200"></tbody>
                         </table>
                     </div>
-                     <p class="text-xs text-gray-500 mt-2" data-translate="wbgtApproxNote">**注:** WBGT値は、OpenWeatherMap APIから入手可能なデータ（気温、湿度、風速、雲量）に基づく推定値です。日射量の直接測定は含まれていないため、あくまで目安としてご利用ください。</p>
+                   <p class="text-xs text-gray-500 mt-2" data-translate="wbgtApproxNote">**注:** WBGT値は、OpenWeatherMap APIから入手可能なデータ（気温、湿度、風速、雲量）に基づく推定値です。日射量の直接測定は含まれていないため、あくまで目安としてご利用ください。</p>
+                   
+                    <!-- Gemini AI Features Section -->
+                    <div class="mt-6">
+                        <div class="flex flex-wrap justify-between items-center mb-2 gap-2">
+                            <h3 class="text-lg font-medium" data-translate="aiTipsTitle">✨ AI搭載の安全計画</h3>
+                            <button id="get-activity-advice-btn" class="text-sm bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-1 px-3 rounded-lg transition-colors" data-translate="getActivityAdviceBtn">特定活動へのアドバイス</button>
+                        </div>
+                        <div id="actionable-tips" class="p-4 rounded-md whitespace-pre-line bg-gray-50 border text-sm">
+                            <!-- AI-generated general tips will go here -->
+                        </div>
+                        
+                        <!-- Hidden section for activity-specific advice -->
+                        <div id="activity-advice-container" class="hidden mt-4 p-4 border rounded-lg bg-white">
+                            <label for="activity-input" class="block text-sm font-medium text-gray-700 mb-1" data-translate="activityInputLabel">計画している活動を入力してください</label>
+                            <textarea id="activity-input" rows="2" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"></textarea>
+                            <button id="generate-activity-advice-btn" class="mt-2 w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:shadow-outline transition-colors disabled:opacity-50">
+                                <span data-translate="generateActivityAdviceBtn">✨ AIアドバイスを生成</span>
+                            </button>
+                            <div id="activity-feedback-container" class="text-center mt-2 text-sm"></div>
+                        </div>
+                    </div>
 
-                    <h3 class="text-lg font-medium mt-6 mb-2" data-translate="actionableTipsTitle">具体的な安全対策</h3>
-                    <div id="actionable-tips" class="p-4 rounded-md whitespace-pre-line"></div>
                 </section>
             </div>
 
@@ -139,41 +165,50 @@
         
         <!-- Page Footer -->
         <footer class="text-center mt-8 text-xs text-gray-500">
-            <p>Developed by Gemini - Air Liquide Japan</p>
-            <p>Prepared by Haissam - haissam.khan@airliquide.com</p>
+            <p>Developed with Gemini</p>
+            <p>Prepared by Haissam - engr.haissam@gmail.com</p>
+            <!-- Creative Commons License -->
+            <div class="mt-4 text-gray-500">
+                <p data-translate="licenseText"></p>
+            </div>
         </footer>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // --- CONFIGURATION ---
-            // IMPORTANT: Exposing your API key in client-side code is a security risk.
+            // IMPORTANT: Replace 'YOUR_OPENWEATHERMAP_API_KEY_HERE' with your actual OpenWeatherMap API key.
+            // This key MUST be authorized for BOTH the 5-day / 3-hour Weather Forecast API
+            // AND the Geocoding API by OpenWeatherMap to avoid 'Invalid API key' errors.
+            // If you are receiving a 401 error, it indicates an issue with this key's validity or permissions.
             const API_KEY = '51f4aecd535a479897726bc25008d8bc'; 
 
             const state = {
                 currentLang: (navigator.language.startsWith('ja')) ? 'ja' : 'en',
                 weatherData: null,
                 locationName: null,
+                processedData: [],
             };
 
             const translations = {
+                // ... Existing translations ...
                 appTitle: { ja: "熱中症リスクチェック", en: "Heatstroke Risk Check" },
                 locationInputTitle: { ja: "場所を入力", en: "Enter Location" },
                 locationInputLabel: { ja: "市町村名または郵便番号", en: "City Name or Postcode" },
                 locationInputPlaceholder: { ja: "例: 千葉県浦安市 または 279-0031", en: "e.g., Urayasu, Chiba or 279-0031" },
                 checkRiskButton: { ja: "リスクを確認", en: "Check Risk" },
+                clearResultsButton: { ja: "クリア", en: "Clear Results" }, // New translation for clear button
                 resultsTitle: { ja: "リスク評価", en: "Risk Assessment" },
                 locationLabel: { ja: "場所:", en: "Location:" },
                 assessmentTimeLabel: { ja: "評価時刻:", en: "Assessment Time:" },
                 riskGaugeTitle: { ja: "現在/直近のリスクゲージ", en: "Current/Upcoming Risk Gauge" },
-                hourlyForecastTitle: { ja: "予報 (次の24時間)", en: "Forecast (Next 24 Hours)" },
+                hourlyForecastTitle: { ja: "予報 (次の30時間)", en: "Forecast (Next 30 Hours)" }, // Updated to 30 hours
                 timeHeader: { ja: "時刻", en: "Time" },
                 tempHeader: { ja: "気温 (°C)", en: "Temp (°C)" },
                 heatRiskHeader: { ja: "暑熱リスク", en: "Heat Risk" },
                 windChillHeader: { ja: "体感温度 (°C)", en: "Feels Like (°C)" },
                 rainHeader: { ja: "雨 (mm/3h)", en: "Rain (mm/3h)" },
                 wbgtApproxNote: { ja: "**注:** WBGT値は、OpenWeatherMap APIから入手可能なデータ（気温、湿度、風速、雲量）に基づく推定値です。日射量の直接測定は含まれていないため、あくまで目安としてご利用ください。", en: "**Note:** WBGT values are an estimation based on available OpenWeatherMap API data (temp, humidity, wind, cloud cover). They do not include direct solar radiation measurement and should be used as a guideline." },
-                actionableTipsTitle: { ja: "具体的な安全対策", en: "Actionable Safety Tips" },
                 standardsTitle: { ja: "準拠基準・情報", en: "Standards & Information" },
                 standardsText: { ja: "このツールは、厚生労働省の熱中症予防ガイドライン（WBGT）、JIS B 7922、および一般的な労働安全ガイドラインに基づいたリスク評価を提供します。常に公式の警報および現場固有の安全手順を優先してください。", en: "This tool provides risk assessment based on guidelines from the Japanese Ministry of Health, Labour and Welfare (MHLW) for heat stress (WBGT), JIS B 7922, and general occupational safety guidelines. Always prioritize official alerts and site-specific safety protocols." },
                 legendTitle: { ja: "凡例 (WBGT 暑熱リスク)", en: "Legend (WBGT Heat Risk)" },
@@ -185,6 +220,16 @@
                 feedbackLoading: { ja: "データを読み込み中...", en: "Loading data..." },
                 errorInvalidLocation: { ja: "有効な場所が見つかりません。入力をご確認ください。", en: "Could not find a valid location. Please check your input." },
                 errorApi: { ja: "天気データの取得中にエラーが発生しました。APIキーまたはネットワーク接続を確認してください。", en: "An error occurred while fetching weather data. Please check your API key or network connection." },
+                // NEW AI-related translations
+                aiTipsTitle: { ja: "✨ AI搭載の安全計画", en: "✨ AI-Powered Safety Plan" },
+                getActivityAdviceBtn: { ja: "特定活動へのアドバイス", en: "Advice for Specific Activity" },
+                activityInputLabel: { ja: "計画している活動を入力してください (例: 広い工場敷地内を2時間かけて行う安全・設備パトロール)", en: "Describe your planned activity (e.g., Conducting a 2-hour safety and equipment inspection across a large industrial site.)" },
+                generateActivityAdviceBtn: { ja: "✨ AIアドバイスを生成", en: "✨ Generate AI Advice" },
+                aiLoading: { ja: "AIがアドバイスを生成中です...", en: "AI is generating advice..." },
+                aiError: { ja: "AIアドバイスを生成できませんでした。後でもう一度お試しください。", en: "Could not generate AI advice. Please try again later." },
+                // License translation
+                licenseText: { ja: 'データはOpenWeatherMapの地理情報および天気予報を使用しています。<br>本作品は<a href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="license" class="text-blue-600 hover:underline">CC BY-SA 4.0</a>ライセンスの下で提供されます。', en: 'Data from OpenWeatherMap Geocoding & Weather Forecast.<br>Licensed under <a href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="license" class="text-blue-600 hover:underline">CC BY-SA 4.0</a>.' },
+                // Pre-defined tips for fallback
                 tip_safe: { ja: "適切な水分補給を心がけてください。", en: "Maintain proper hydration." },
                 tip_caution: { ja: "意識的に水分補給を行い、休憩を検討してください。", en: "Consciously hydrate and consider taking breaks." },
                 tip_warning: { ja: "頻繁に休憩を取り、激しい運動は避けてください。", en: "Take frequent breaks and avoid strenuous exercise." },
@@ -192,25 +237,18 @@
                 tip_danger: { ja: "原則として屋外での激しい作業は中止してください。非常に危険な状態です。", en: "In principle, stop strenuous outdoor work. Conditions are highly dangerous." },
                 tip_cold: { ja: "低温によるリスクがあります。適切な防寒着を着用してください。", en: "Risk of cold stress. Wear appropriate warm clothing." },
                 tip_rain: { ja: "雨によるスリップや視界不良に注意してください。", en: "Beware of slippery conditions due to rain." },
+                aiFallbackTipsHeader: { ja: "AIアドバイスが利用できないため、一般的な安全計画を表示します:", en: "AI advice unavailable. Displaying general safety plan:" },
+                noSpecificActivityFallback: { ja: "特定の活動に対するアドバイスはAIが生成できないため、一般的な安全計画をご参照ください。", en: "Specific activity advice cannot be generated by AI. Please refer to the general safety plan." },
             };
 
             const riskConfig = {
                 levels: [
-                    { limit: 21, key: "almost-safe",    cssClass: "risk-almost-safe",    gauge: 20, tipKey: "tip_safe" },
-                    { limit: 25, key: "caution",        cssClass: "risk-caution",        gauge: 40, tipKey: "tip_caution" },
-                    { limit: 28, key: "warning",        cssClass: "risk-warning",        gauge: 60, tipKey: "tip_warning" },
-                    { limit: 31, key: "severe-warning", cssClass: "risk-severe-warning", gauge: 80, tipKey: "tip_severe_warning" },
-                    { limit: Infinity, key: "danger",   cssClass: "risk-danger",         gauge: 100, tipKey: "tip_danger" }
+                    { limit: 21, key: "almost-safe",    cssClass: "risk-almost-safe",    gauge: 20 },
+                    { limit: 25, key: "caution",        cssClass: "risk-caution",        gauge: 40 },
+                    { limit: 28, key: "warning",        cssClass: "risk-warning",        gauge: 60 },
+                    { limit: 31, key: "severe-warning", cssClass: "risk-severe-warning", gauge: 80 },
+                    { limit: Infinity, key: "danger",   cssClass: "risk-danger",         gauge: 100 }
                 ],
-                tipStyles: {
-                    "almost-safe":    "bg-blue-50 border-l-4 border-blue-400 text-blue-700",
-                    "caution":        "bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800",
-                    "warning":        "bg-orange-50 border-l-4 border-orange-400 text-orange-800",
-                    "severe-warning": "bg-red-50 border-l-4 border-red-400 text-red-800",
-                    "danger":         "bg-purple-50 border-l-4 border-purple-400 text-purple-800",
-                    "cold":           "bg-sky-50 border-l-4 border-sky-400 text-sky-800",
-                    "rain":           "bg-gray-100 border-l-4 border-gray-400 text-gray-800"
-                }
             };
             
             const ui = {
@@ -218,6 +256,7 @@
                 checkRiskBtn: document.getElementById('check-risk-btn'),
                 feedbackContainer: document.getElementById('feedback-container'),
                 resultsSection: document.getElementById('results-section'),
+                clearResultsBtn: document.getElementById('clear-results-btn'), // Get reference to the new button
                 langJaBtn: document.getElementById('lang-ja-btn'),
                 langEnBtn: document.getElementById('lang-en-btn'),
                 locationDisplay: document.getElementById('location-display'),
@@ -226,6 +265,12 @@
                 gaugeDetails: document.getElementById('gauge-details'),
                 hourlyForecastBody: document.getElementById('hourly-forecast-body'),
                 actionableTips: document.getElementById('actionable-tips'),
+                // AI UI elements
+                getActivityAdviceBtn: document.getElementById('get-activity-advice-btn'),
+                activityAdviceContainer: document.getElementById('activity-advice-container'),
+                activityInput: document.getElementById('activity-input'),
+                generateActivityAdviceBtn: document.getElementById('generate-activity-advice-btn'),
+                activityFeedbackContainer: document.getElementById('activity-feedback-container'),
             };
 
             function translatePage() {
@@ -240,84 +285,23 @@
                     }
                 });
                 ui.locationInput.placeholder = translations.locationInputPlaceholder[state.currentLang];
+                // Only update placeholder if it's the activity input
+                if (ui.activityInput) { // Add a check to ensure element exists
+                    const match = translations.activityInputLabel[state.currentLang].match(/\(.*\)/);
+                    ui.activityInput.placeholder = match ? match[0] : '';
+                }
 
                 if (state.weatherData) {
-                    processAndDisplayData(state.weatherData, state.locationName);
+                    processAndDisplayData(state.weatherData, state.locationName, false);
                 }
             }
-
-            function switchLanguage(lang) {
-                state.currentLang = lang;
-                translatePage();
-            }
-
-            function showFeedback(messageKey, isError = false) {
-                const message = translations[messageKey]?.[state.currentLang] || "An unknown error occurred.";
-                ui.feedbackContainer.innerHTML = `<p class="${isError ? 'text-red-600' : 'text-blue-600'}">${message}</p>`;
-                if (!isError && messageKey === 'feedbackLoading') {
-                    ui.feedbackContainer.innerHTML += `<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mt-2"></div>`;
-                }
-            }
-            function clearFeedback() { ui.feedbackContainer.innerHTML = ''; }
-
-            async function handleRiskCheck() {
-                const location = ui.locationInput.value.trim();
-                if (!location) return;
-
-                ui.resultsSection.classList.add('hidden');
-                clearFeedback();
-                showFeedback('feedbackLoading');
-
-                try {
-                    const geoData = await getGeoCoordinates(location);
-                    const weatherData = await getWeatherData(geoData.lat, geoData.lon);
-                    
-                    state.weatherData = weatherData;
-                    state.locationName = geoData.name;
-
-                    processAndDisplayData(weatherData, geoData.name);
-                    clearFeedback();
-                } catch (error) {
-                    console.error("Error during risk check:", error);
-                    const messageKey = Object.keys(translations).includes(error.message) ? error.message : 'errorApi';
-                    showFeedback(messageKey, true);
-                }
-            }
-
-            async function getGeoCoordinates(location) {
-                const isPostcode = /^\d{3}-?\d{4}$/.test(location);
-                let url;
-                if (isPostcode) {
-                    url = `https://api.openweathermap.org/geo/1.0/zip?zip=${location},JP&appid=${API_KEY}`;
-                } else {
-                    url = `https://api.openweathermap.org/geo/1.0/direct?q=${location},JP&limit=1&appid=${API_KEY}`;
-                }
-                
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('errorApi');
-                const data = await response.json();
-
-                if (Array.isArray(data) && data.length > 0) {
-                    const { lat, lon, name, state: region, country } = data[0];
-                    return { lat, lon, name: `${name}, ${region || ''} ${country}` };
-                } else if (data.lat) {
-                    return { lat: data.lat, lon: data.lon, name: `${data.name}, ${data.country}` };
-                }
-                throw new Error('errorInvalidLocation');
-            }
-
-            async function getWeatherData(lat, lon) {
-                const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric`;
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('errorApi');
-                return await response.json();
-            }
-
-            function processAndDisplayData(weatherData, locationName) {
+            
+            async function processAndDisplayData(weatherData, locationName, fetchAiTips = true) {
                 const now = new Date();
-                const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+                // Changed from 24 hours to 30 hours
+                const thirtyHoursFromNow = new Date(now.getTime() + 30 * 60 * 60 * 1000); 
 
-                const processedData = weatherData.list.map(item => {
+                state.processedData = weatherData.list.map(item => {
                     const Ta = item.main.temp;
                     const RH = item.main.humidity;
                     const Tnw = calculateTnw(Ta, RH);
@@ -332,9 +316,9 @@
                         wbgt: wbgt.toFixed(1),
                         heatRisk: getHeatRiskLevel(wbgt),
                     };
-                }).filter(item => item.time <= twentyFourHoursFromNow);
+                }).filter(item => item.time <= thirtyHoursFromNow); // Filter for 30 hours
 
-                if (processedData.length === 0) {
+                if (state.processedData.length === 0) {
                     showFeedback('errorApi', true);
                     return;
                 }
@@ -342,102 +326,264 @@
                 ui.locationDisplay.textContent = locationName;
                 ui.assessmentTimeDisplay.textContent = new Date().toLocaleString(state.currentLang === 'ja' ? 'ja-JP' : 'en-US');
                 
-                const currentRisk = processedData[0];
+                const currentRisk = state.processedData[0];
                 updateGauge(currentRisk);
-                updateTips(currentRisk);
-                updateHourlyTable(processedData);
+                updateHourlyTable(state.processedData);
+
+                if (fetchAiTips) {
+                    generateAiTips(state.processedData, null, ui.actionableTips, ui.feedbackContainer);
+                }
                 
                 ui.resultsSection.classList.remove('hidden');
             }
-            
-            function calculateTnw(Ta, RH) {
-                return Ta * Math.atan(0.151977 * Math.pow(RH + 8.313659, 0.5)) + Math.atan(Ta + RH) - Math.atan(RH - 1.676331) + 0.00391838 * Math.pow(RH, 1.5) * Math.atan(0.023101 * RH) - 4.686035;
+
+            // --- AI FEATURE ---
+            async function generateAiTips(processedData, activity = null, targetElement, feedbackElement, buttonElement = null) {
+                if(buttonElement) buttonElement.disabled = true;
+                feedbackElement.innerHTML = `<p class="text-blue-600">${translations.aiLoading[state.currentLang]}</p>`;
+
+                const forecastSummary = processedData.map(p => 
+                    `- ${p.time.toLocaleTimeString(undefined, {hour: '2-digit', minute:'2-digit'})}: WBGT ${p.wbgt}°C (${translations[`risk_${p.heatRisk.key}`][state.currentLang]}), Temp ${p.temp}°C`
+                ).join('\n');
+
+                let prompt;
+                if (activity) {
+                    prompt = `You are a Japanese health and safety advisor. A user plans to do this activity: "${activity}".
+                    Based on the following 30-hour forecast for ${state.locationName}, provide a concise, actionable safety plan for this specific activity.
+                    Focus on the highest risk periods. Provide a short risk summary and then a bulleted list of 3-4 specific precautions.
+                    Forecast:\n${forecastSummary}
+                    Respond in ${state.currentLang === 'ja' ? 'Japanese' : 'English'}. Format the response cleanly.`;
+                } else {
+                    prompt = `You are a Japanese health and safety advisor. Based on the following 30-hour forecast for ${state.locationName}, generate a concise, actionable safety plan.
+                    Summarize the overall risk for the day and highlight the period with the highest risk. Then provide a bulleted list of 3-4 key precautions for the day.
+                    Forecast:\n${forecastSummary}
+                    Respond in ${state.currentLang === 'ja' ? 'Japanese' : 'English'}. Format the response cleanly.`;
+                }
+                
+                try {
+                    const apiKey = ""; // Will be auto-provided by the environment
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const payload = { contents: [{ role: "user", parts: [{ text: prompt }] }] };
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        // If API response is not OK, trigger fallback
+                        throw new Error('API response not OK, falling back to predefined tips.');
+                    }
+
+                    const result = await response.json();
+                    
+                    if (result.candidates && result.candidates.length > 0 && result.candidates[0].content.parts.length > 0) {
+                        const rawText = result.candidates[0].content.parts[0].text;
+                        targetElement.innerHTML = formatAiResponse(rawText);
+                        if (feedbackElement && feedbackElement !== targetElement) {
+                           feedbackElement.innerHTML = '';
+                        }
+                    } else {
+                        // If no content in API response, trigger fallback
+                        throw new Error('No content in API response, falling back to predefined tips.');
+                    }
+
+                } catch (error) {
+                    console.error("Gemini API error or fallback triggered:", error);
+                    feedbackElement.innerHTML = `<p class="text-red-600">${translations.aiError[state.currentLang]}</p>`;
+                    
+                    // --- FALLBACK LOGIC: Display pre-defined tips ---
+                    let fallbackTipsContent = `<p><strong>${translations.aiFallbackTipsHeader[state.currentLang]}</strong></p><ul>`;
+                    
+                    // Get the current/highest risk level for the primary tip
+                    const currentRisk = processedData[0]; // Assuming processedData is sorted by time, first entry is current/nearest
+                    fallbackTipsContent += `<li>${translations[`tip_${currentRisk.heatRisk.key}`][state.currentLang]}</li>`;
+
+                    // Check for rain in the next 30 hours
+                    const hasRain = processedData.some(item => parseFloat(item.rain) > 0.5); // More than 0.5mm/3h indicates noticeable rain
+                    if (hasRain) {
+                        fallbackTipsContent += `<li>${translations.tip_rain[state.currentLang]}</li>`;
+                    }
+
+                    // Check for cold temperatures in the next 30 hours (e.g., below 5°C)
+                    const hasCold = processedData.some(item => parseFloat(item.temp) < 5); // Below 5°C as a threshold for cold
+                    if (hasCold) {
+                        fallbackTipsContent += `<li>${translations.tip_cold[state.currentLang]}</li>`;
+                    }
+                    
+                    fallbackTipsContent += `</ul>`;
+
+                    if (activity) {
+                        // If user asked for specific activity advice, and AI failed, give a general fallback + specific fallback message
+                        targetElement.innerHTML = `<p>${translations.noSpecificActivityFallback[state.currentLang]}</p>` + fallbackTipsContent;
+                    } else {
+                        // For general advice, just display the fallback tips
+                        targetElement.innerHTML = fallbackTipsContent;
+                    }
+
+                } finally {
+                    if(buttonElement) buttonElement.disabled = false;
+                }
             }
 
-            function calculateTg(Ta, cloudiness) {
-                let radiantHeatIncrement = 0.5;
-                if (cloudiness < 25) radiantHeatIncrement = 6;
-                else if (cloudiness < 50) radiantHeatIncrement = 4;
-                else if (cloudiness < 75) radiantHeatIncrement = 2;
-                return Ta + radiantHeatIncrement;
-            }
-            
-            function getHeatRiskLevel(wbgt) {
-                return riskConfig.levels.find(level => wbgt < level.limit);
+            function formatAiResponse(text) {
+                return text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                    .replace(/^- /gm, '<br>• ') // Bullets
+                    .replace(/^\* /gm, '<br>• ') // Bullets
+                    .trim();
             }
 
-            // --- UI UPDATE HELPERS ---
+            // --- Other Functions ---
+            function switchLanguage(lang) {
+                state.currentLang = lang;
+                translatePage();
+            }
+            function showFeedback(messageKey, isError = false) {
+                const message = translations[messageKey]?.[state.currentLang] || "An unknown error occurred.";
+                ui.feedbackContainer.innerHTML = `<p class="${isError ? 'text-red-600' : 'text-blue-600'}">${message}</p>`;
+                if (!isError && messageKey === 'feedbackLoading') {
+                    ui.feedbackContainer.innerHTML += `<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mt-2"></div>`;
+                }
+            }
+            function clearFeedback() { 
+                ui.feedbackContainer.innerHTML = ''; 
+                ui.activityFeedbackContainer.innerHTML = ''; // Clear activity specific feedback
+            }
+
+            // Function to clear all results and reset the UI
+            function clearResults() {
+                ui.resultsSection.classList.add('hidden');
+                ui.locationInput.value = ''; // Clear the input field
+                ui.actionableTips.innerHTML = ''; // Clear AI general tips
+                ui.activityInput.value = ''; // Clear activity input
+                ui.activityAdviceContainer.classList.add('hidden'); // Hide activity advice section
+                clearFeedback(); // Clear general feedback
+                // Optionally reset state variables if needed, though mostly covered by UI clearing
+                state.weatherData = null;
+                state.locationName = null;
+                state.processedData = [];
+            }
+
+
+            async function handleRiskCheck() {
+                const location = ui.locationInput.value.trim();
+                if (!location) return;
+                ui.resultsSection.classList.add('hidden');
+                clearFeedback();
+                showFeedback('feedbackLoading');
+                try {
+                    const geoData = await getGeoCoordinates(location);
+                    const weatherData = await getWeatherData(geoData.lat, geoData.lon);
+                    state.weatherData = weatherData;
+                    state.locationName = geoData.name;
+                    processAndDisplayData(weatherData, geoData.name);
+                    clearFeedback();
+                } catch (error) {
+                    console.error("Error during risk check:", error);
+                    const messageKey = Object.keys(translations).includes(error.message) ? error.message : 'errorApi';
+                    showFeedback(messageKey, true);
+                }
+            }
+            
+            async function getGeoCoordinates(location) {
+                const isPostcode = /^\d{3}-?\d{4}$/.test(location);
+                let url;
+                if (isPostcode) {
+                    url = `https://api.openweathermap.org/geo/1.0/zip?zip=${location},JP&appid=${API_KEY}`;
+                } else {
+                    // For direct city name lookup, remove ',JP' to allow international searches
+                    url = `https://api.openweathermap.org/geo/1.0/direct?q=${location}&limit=1&appid=${API_KEY}`;
+                }
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("OpenWeatherMap Geocoding API Error (Status:", response.status, "):", errorText);
+                    throw new Error('errorApi');
+                }
+                const data = await response.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    const { lat, lon, name, state: region, country } = data[0];
+                    // Prefer displaying city, region, country if available for clarity
+                    let displayName = name;
+                    if (region && region !== name) displayName += `, ${region}`;
+                    if (country && country !== region && country !== name) displayName += `, ${country}`;
+                    return { lat, lon, name: displayName };
+                } else if (data.lat && data.name) { // For postcode lookup, data might not be an array
+                    return { lat: data.lat, lon: data.lon, name: `${data.name}, ${data.country || ''}` };
+                }
+                throw new Error('errorInvalidLocation');
+            }
+
+            async function getWeatherData(lat, lon) {
+                // Changed from 24 hours to 30 hours in the API call
+                const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=metric&cnt=${Math.ceil(30 / 3)}`; // OpenWeatherMap returns data in 3-hour steps
+                const response = await fetch(url);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error("OpenWeatherMap Forecast API Error (Status:", response.status, "):", errorText);
+                    throw new Error('errorApi');
+                }
+                return await response.json();
+            }
+
+            // WBGT Calculation Formulas (Approximations)
+            // Tnw (Natural Wet-Bulb Temperature) approximation based on Ta and RH
+            function calculateTnw(Ta, RH) { 
+                return Ta * Math.atan(0.151977 * Math.pow(RH + 8.313659, 0.5)) + 
+                       Math.atan(Ta + RH) - 
+                       Math.atan(RH - 1.676331) + 
+                       0.00391838 * Math.pow(RH, 1.5) * Math.atan(0.023101 * RH) - 4.686035; 
+            }
+            // Tg (Globe Temperature) approximation based on Ta and cloudiness (as a proxy for solar radiation)
+            function calculateTg(Ta, cloudiness) { 
+                let radiantHeatIncrement = 0.5; // Default for heavy cloud cover
+                if (cloudiness < 25) radiantHeatIncrement = 6; // Clear sky
+                else if (cloudiness < 50) radiantHeatIncrement = 4; // Scattered clouds
+                else if (cloudiness < 75) radiantHeatIncrement = 2; // Broken clouds
+                return Ta + radiantHeatIncrement; 
+            }
+            function getHeatRiskLevel(wbgt) { return riskConfig.levels.find(level => wbgt < level.limit); }
             function updateGauge(riskData) {
                 const riskLevel = riskData.heatRisk;
                 const gaugeFill = ui.riskGaugeFill;
-
-                gaugeFill.classList.remove(
-                    'risk-almost-safe',
-                    'risk-caution',
-                    'risk-warning',
-                    'risk-severe-warning',
-                    'risk-danger'
-                );
-                
+                // Remove all risk classes before adding the new one
+                gaugeFill.classList.remove('risk-almost-safe','risk-caution','risk-warning','risk-severe-warning','risk-danger');
                 gaugeFill.classList.add(riskLevel.cssClass);
-
                 gaugeFill.style.width = `${riskLevel.gauge}%`;
                 gaugeFill.textContent = translations[`risk_${riskLevel.key}`][state.currentLang];
                 ui.gaugeDetails.textContent = `WBGT: ${riskData.wbgt}°C`;
             }
-            
-            function updateTips(riskData) {
-                let tips = [translations[riskData.heatRisk.tipKey][state.currentLang]];
-                let dominantRiskKey = riskData.heatRisk.key;
-
-                if (parseFloat(riskData.feels_like) < 5 && parseFloat(riskData.feels_like) < parseFloat(riskData.temp)) {
-                    tips.push(translations.tip_cold[state.currentLang]);
-                    if (dominantRiskKey === 'almost-safe' || dominantRiskKey === 'caution') {
-                       dominantRiskKey = 'cold';
-                    }
-                }
-                if (parseFloat(riskData.rain) > 1.0) {
-                    tips.push(translations.tip_rain[state.currentLang]);
-                }
-                
-                const tipStyle = riskConfig.tipStyles[dominantRiskKey] || riskConfig.tipStyles['caution'];
-                ui.actionableTips.className = `p-4 rounded-md whitespace-pre-line ${tipStyle}`;
-                ui.actionableTips.innerHTML = tips.join('<br><br>');
-            }
-
             function updateHourlyTable(processedData) {
                 ui.hourlyForecastBody.innerHTML = '';
-                
                 const timeFormat = new Intl.DateTimeFormat(state.currentLang === 'ja' ? 'ja-JP' : 'en-GB', { hour: '2-digit', minute: '2-digit', hour12: false });
                 const dateFormat = new Intl.DateTimeFormat(state.currentLang === 'ja' ? 'ja-JP' : 'en-CA', { weekday: 'short', month: 'numeric', day: 'numeric' });
-
                 processedData.forEach(item => {
                     const row = ui.hourlyForecastBody.insertRow();
                     const riskLabel = translations[`risk_${item.heatRisk.key}`][state.currentLang];
                     const riskColorClass = item.heatRisk.cssClass;
-
-                    row.innerHTML = `
-                        <td class="px-3 py-2 whitespace-nowrap text-sm">${dateFormat.format(item.time)} ${timeFormat.format(item.time)}</td>
-                        <td class="px-3 py-2 whitespace-nowrap text-sm">${item.temp}</td>
-                        <td class="px-3 py-2 whitespace-nowrap text-sm font-semibold">${item.wbgt}</td>
-                        <td class="px-3 py-2 whitespace-nowrap text-sm">
-                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${riskColorClass}">
-                                ${riskLabel}
-                            </span>
-                        </td>
-                        <td class="px-3 py-2 whitespace-nowrap text-sm">${item.feels_like}</td>
-                        <td class="px-3 py-2 whitespace-nowrap text-sm">${item.rain}</td>
-                    `;
+                    row.innerHTML = `<td class="px-3 py-2 whitespace-nowrap text-sm">${dateFormat.format(item.time)} ${timeFormat.format(item.time)}</td><td class="px-3 py-2 whitespace-nowrap text-sm">${item.temp}</td><td class="px-3 py-2 whitespace-nowrap text-sm font-semibold">${item.wbgt}</td><td class="px-3 py-2 whitespace-nowrap text-sm"><span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${riskColorClass}">${riskLabel}</span></td><td class="px-3 py-2 whitespace-nowrap text-sm">${item.feels_like}</td><td class="px-3 py-2 whitespace-nowrap text-sm">${item.rain}</td>`;
                 });
             }
-
+            
+            // --- EVENT LISTENERS ---
             ui.checkRiskBtn.addEventListener('click', handleRiskCheck);
-            ui.locationInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') handleRiskCheck();
-            });
+            ui.locationInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleRiskCheck(); });
             ui.langJaBtn.addEventListener('click', () => switchLanguage('ja'));
             ui.langEnBtn.addEventListener('click', () => switchLanguage('en'));
+            ui.getActivityAdviceBtn.addEventListener('click', () => {
+                ui.activityAdviceContainer.classList.toggle('hidden');
+            });
+            ui.generateActivityAdviceBtn.addEventListener('click', () => {
+                const activityText = ui.activityInput.value.trim();
+                if (activityText) {
+                    generateAiTips(state.processedData, activityText, ui.actionableTips, ui.activityFeedbackContainer, ui.generateActivityAdviceBtn);
+                }
+            });
+            ui.clearResultsBtn.addEventListener('click', clearResults); // Event listener for the new clear button
 
+            // --- INITIAL PAGE SETUP ---
             translatePage();
         });
     </script>
